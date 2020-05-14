@@ -1,0 +1,198 @@
+Building DLLs
+---------------
+
+C code function hello in blah.c
+RCMD SHLIB blah.c
+produces blah.dll
+
+Load in R with: 
+>dyn.load("blah.dll")
+>.C("hello")
+
+Problems to solve
+-----------------
+Manually copied Rcpp header files Rcpp.h, RcppCommon.h, mmm lots more from win-library to R\library
+Tried adding env var PKG_LIBS
+Need to ensure Rcpp is installed to R\library in the first place maybe?
+- Tried remove.packages("Rcpp") then install.packages("Rcpp", .libPaths()[2]) but was told path is 
+unwriteable.  Seems to be owned by admin. Hmmmmm
+- Ran RGui as Admin and installed Rcpp to standard library like that.  Didn't help SHLIB.
+SO...
+$ export PKG_LIBS=`Rscript -e "Rcpp:::LdFlags()"`
+$ export PKG_CXXFLAGS=`Rscript -e "Rcpp:::CxxFlags()"`
+$ R CMD SHLIB myfile.cpp
+Problem is that these script calls don't deal with paths with spaces:
+Created	 Makevars file with:
+PKG_LIBS+= -lRcpp
+PKG_LIBS+= -LC:/Users/Troy/Documents/R/win-library/2.14/Rcpp/libs/i386
+PKG_CPPFLAGS = -IC:/Users/Troy/Documents/R/win-library/2.14/Rcpp/include
+
+
+Warning that getElement from package EPOC is masking getElement from package base DONE
+
+PROBLEM with inline packages setCMethod function.  Created own temporary setEPOCCPPMethod in Support.R DONE
+
+File Connections: Need to find a solution to this in C++.  
+- Could use RInside to get an R file connection but then is it possible to write from C++ to these?
+- Could implement a C++ file connections class and create C++ get/write/read/close methods hooked to Element R class?
+
+Catch all NULL/Rf_isNull passed as sexpObj to ALL functions.  Use of asS4Obj does this.  DONE
+
+Access message verbosity by creating an Environment at base.env and getting at options list there. DONE
+
+Ideas
+-----
+Check out Rcpp package (and rccpbind?) DONE
+Read R Internals DONE
+Need to #include <R.h> DONE
+Can #include <Rinternals.h> or for S4 use <Rdefines.h> in order to make macros available for dealing 
+with R objects in C/C++/FORTRAN
+Maybe need to develop some C equivalent functions to getSlot(), getSignature() etc in R so that  DONE
+actual Action code can call these as per R without having to deal with the complexities of 
+SEXP objects in C.
+Any SEXP objects declared in C code need to be PROTECT()ed from garbage collection within the 
+scope of the C function.
+Can use #include <R_ext/Parse.h> to provide wrapper functions to parse R expressions from
+within C
+Looks like it is possible to call C functions from within FORTRAN.  In this case the C functions developed
+to deal with S4 objects could be reused for FORTRAN Action code.
+
+Will need a new field on Action objects selecting code language type (R, C, F)
+Do I compile all functions into a single library?
+Do we compile all dll code when write out to disk?
+May have to add a field to Action object to insert #include statements before function is written out.
+
+TODO Generally
+--------------
+EB
+--
+Need ability to upgrade imported XML objects to current version (or at least be backward compatable, 
+or at least allow identification of version and able to block import)
+Deal with template objects being used across universes
+Use a data model for the tree and stop duplicating efforts as Universe objects
+Investigate swapping to rServe
+Change all setMethod / setGeneric header output to include signature() 	DONE
+	including initialiseReplicate(), initialiseTransition(), updateState(), printState()
+Reduced/modified signature for setup/transform methods. DONE
+Modify signature for Transform methods on output.  Also need to fix first line of code in a setup methods in DB
+Fix initialiseReplicate code to deal with random number gen linked to scenarioN in Krill and Manager (also take out tr loop) WATCH THIS DOESNT CAUSE CHANGE IN DATA
+Alter report defaults layout as per changes in universe.data.R DONE
+Change displayCalendar to outputCalendar and have controller do by default (with arg to turn off) CHANGE IN RunEPOC file
+Replace all getSignatureSimple with getSimpleSignature TODO in DB
+Replace displaySignature with getFullSignature TODO in DB
+Change printSignature to getSignatureMulti inside an epocMessage()
+Replace all calls to epocMessage, epocVerboseMessage and epocDebugMessage with epoc....Message(.Object, ...)
+Added ellipses to all Element derived classes and the callNextMethod in them. 	TODO in DB
+Change file connection reads in:												TODO in DB
+E.O.Env.KPFM.annual_update.01.R, M.CL.KPFM.manager.SurveySSMU.01.R 
+And writes (change cat to writeFileConnection, file= to conn=, and remove "\n"'s: TODO in DB
+E.O.Env.KPFM.01.R
+Modify connection writing in: E.O.Env.KPFM.printState.01.R, B.MI.Es.KPFM.printState.01.R, B.Pr.KPFM.printState.01.R, 
+			A.Fi.KPFM.SeasonAccounting.01.R, M.CL.KPFM.manager.printState.01.R, M.CL.KPFM.manager.SurveySSMU.01.R, 
+Modify connection reading/scan() in E.O.Env.KPFM.01.R, E.O.Env.KPFM.annual_update.01.R, M.CL.KPFM.manager.SurveySSMU.01.R and use getRuntimePath()
+Use getRuntimePath() in all getFileConnection instances!! TODO
+Change getInputPath() to getBasePath() TODO in DB
+Debug/fix file writing format, create asCSVCharacter() TODO in DB
+Change stop()s to epocErrorMessage halt=TRUEs in: B.MI.Es.KPFM.recruit.01.R, B.MI.Es.KPFM.update.reprod.condition.01.R, B.MI.Es.KPFM.UpdateState.01.R
+			B.Pr.KPFM.Consume.01.R, E.O.Env.KPFM.01.R, E.O.Env.KPFM.annual_update.01.R, M.CL.KPFM.manager.01.R TODO in DB
+Not writing out SSMU_surveys file properly, only repeating first polygon. Fixed in SurveySSMU.R action. TODO in DB
+Also added Manager.data entry for Survey dset to allow truncation of this file prior to trial TODO in DB
+
+EPOC
+----
+Make compiler shut up if epocnotify = quiet  TODO !!!!!!!!!!
+Step through functionality (by period or by action), making universe available at each step. DONE
+Check and test EPOC debug/log output functionality.
+Look at Rcpp as an example to how to produce inline documentation
+Add a getSlotNames() method and a getAttributeNames() method to EPOCObject and Element.  DONE.   Do .Rd
+Modify error msgs from EPOCObject methods to mirror changes in C++ lib
+Create Element method doFlag as a generic.  DONE.  Do .Rd
+Change g/setElement to getEPOCElement and setEPOCElement to avoid clash with new R method.  DONE.  DO .Rd and fix all code in EB
+Fix param names in Element, Universe, Scenario, Controller (esp listName->item). DONE
+Convert getScenario to a single untyped param for scenario. DONE
+Add getCalendar() and getUniverse() methods to Controller class. DONE.  Do .Rd
+Add .breakout method to Controller.  DONE.  Do .Rd
+Modified all action method signatures. DONE.  DO .Rd
+Fix Calendar to output currentScenario by default for each scenario?? NO yearly calendar is always the same.  DONE
+Modify getFileConnection() in Element to replace connections of same name but different path.  DONE
+Modify KrillEnv and E.O.Env.KPFM.01.R initialiseReplicate to use getFileConnection and closeFileConnection(), 
+	not file() and close().  DONE.  Fix in EB (same TODO in Manager and M.CL.KPFM.manager.01.R)!
+ALtered KrillEnv and E.O.Env.KPFM.01.R initialiseReplicate to only write out current scenario. DONE.  Do in EB (and Manager)!
+FOOSA data file B.MI.Es.KPFM.UpdateState.01.R has had getElementListNamesFromID changed to getElementIDIndexes and
+	getListIndexesFromNames changed to getElementIndexes (FIX API doc and EB db data in B.MI.Es.KPFM.UpdateState.01)
+EB FOOSA files changed from Competitor.elements to CompetitorElements
+							Competitor.elements.N to CompetitorElementsN
+							Competitor.indexes to CompetitorIndexes
+							Competitor.indexes.N to CompetitorIndexesN
+	in:
+	Fishery.R, Krill.R, Manager.R, Predator.R, Universe.R, B.MI.Es.KPFM.UpdateState.01.R
+	A.Fi.KPFM.01.R, B.MI.Es.KPFM.01.R, B.Pr.KPFM.01.R, M.CL.KPFM.manager.01.R, B.MI.Es.KPFM.data.01.R
+Refactor Calendar class/methods DONE
+Reduced/modified signature for setup/transform methods.  DONE.  TODO modify EB
+Fix differing .dat output for more than one scenario DONE
+	Fixed problem with initialiseReplicate methods and use of random numbers linked to scenarioN in M.CL.KPFM.manager.01.R and E.O.Env.KPFM.01.R
+Modify testInputPaths() to spot missing className, or classFile (if class not already defined). DONE
+Modify createUniverse() to overload classes of same name, and to bypass NULL classFile if isClass() already
+Problem in setFishingStrategy(), My fault because changed to periodInfo not getAttribute(...) 
+- SpaceTimePattern is assigned as a list of matrices in Fishery data file
+- initialise routine in Fishery class sets state$SpaceTimePattern <- NULL rather than assign data from epocAttributes (input data)
+Added defaults to reporting such as Calendar = list(Print=FALSE, Filename="Calendar.txt"), 
+									Log=list(Level="quiet", Filename="EPOC_Log.txt", Truncate=TRUE),
+									Debug = list(),
+									HeadLines=list(...)
+Debug now inserts into Controller stepthrough slot
+Alter epocMessaging so that it redirects to Output if Print=TRUE
+Added Level setting to Universe report data input to specify epocmsglevel, and remove Print
+Add LOG settings in arguments and in universe data input
+Add DEBUG to universe data input to pass in stepthrough settings
+Add processing of calendar print options from universe data input DONE
+Change displayCalendar to outputCalendar in controller, and outputCalendar to printCalendar in Calendar class
+		and have controller do by default (with arg to turn off) DONE
+Change stepthrough argument to epocdebug	DONE
+Replace all getSignatureSimple with getSimpleSignature in EPOCObject class	DONE
+Replace displaySignature with getFullSignature in EPOCObject class	DONE
+Change printSignature to getSignatureMulti in Element class	DONE
+Make epocMessages methods of EPOCObject.  
+	Pass down parameters in initialize methods of all EPOCObject dervied classes. DONE
+	Add private slots to store these message/logging parameters	DONE
+Added ellipses to all Element derived classes and the callNextMethod in them. DONE
+Move fileConnection methods from Element to EPOCObject.  Reimplement using EPOC.dll DONE
+Add getRuntimePath method to Universe class DONE
+Fix connection reads and scan() in E.O.Env.KPFM.01.R, E.O.Env.KPFM.annual_update.01.R, M.CL.KPFM.manager.SurveySSMU.01.R DONE
+Change getInputPath() to getBasePath()  DONE
+Debug/fix file writing format, create asCSVCharacter() DONE
+Change cat(file) to writeFileConnection in A.Fi.KPFM.SeasonAccounting.01.R, B.MI.Es.KPFM.printState.01.R, B.Pr.KPFM.printState.01.R
+											E.O.Env.KPFM.printState.01.R, M.CL.KPFM.manager.printState.01.R, M.CL.KPFM.manager.SurveySSMU.01.R
+Change .Object returns on set methods to invisible() DONE
+Change stop()s to epocErrorMessage halt=TRUEs in: B.MI.Es.KPFM.recruit.01.R, B.MI.Es.KPFM.update.reprod.condition.01.R, B.MI.Es.KPFM.UpdateState.01.R
+			B.Pr.KPFM.Consume.01.R, E.O.Env.KPFM.01.R, E.O.Env.KPFM.annual_update.01.R, M.CL.KPFM.manager.01.R DONE
+FOUND BUG - Was setTransition(.Object, "transition", value=transition) in B.MI.Es.KPFM.01.R
+			Hadn't changed since 0.3.0 but method setTransition had although I am not sure why error didn't occur before????
+			Still errors in SSMU_surveys and SSMU_TAC output files (maybe related to rand or scan/reads???)
+SECOND BUG - Not writing out SSMU_surveys file properly, only repeating first polygon. Fixed in SurveySSMU.R action.
+			NOTE Problem existed in 0.3.0 too!
+			Also added Manager.data entry for Survey dset to allow truncation of this file prior to trial
+			Changed setHarvestStrategy index from 5 to 6 to match SSMU_surveys changed list now
+Create fromCSVCharacter() function in both R and Rcpp		DONE
+Add optional argument to writeFileCOnnection for adding an eol character.	DONE
+Modify fromCSVCharacter to take a list and return a list too.	DONE
+Replace all readLines() and scan() with readFileConnection.	DONE
+Copy guts of all Krill.01.BLAH.R to KrillEnv etc.  DONE
+
+AFTER FOUND BUG
+
+TODO Revisit EPOC-S4.R and EPOC.R (in base) files !!!!!!!!!!!
+TODO Update inline param comments and API doc
+Catch stop errors from createUniverse, createCalendar and runSimulation TODO
+Rebuild package, but change system to keep Rd docs with EPOC version
+How to specify Binary for package
+
+R2.14 Changes
+WATCH OUT for new function getElement which will clash with the EPOC one I think.	Fixed getEPOCElement() DONE
+The preferred location for vignette sources is now the directory ‘vignettes’ and not ‘inst/doc’: 
+R CMD build will now re-build vignettes in directory ‘vignettes’ and copy the ‘.Rnw’ (etc) files 
+and the corresponding PDFs to ‘inst/doc’. Further files to be copied to ‘inst/doc’ can be specified 
+via the file ‘vignettes/.install_extras’. 
+Remove LazyLoad option from DESCRIPTION file.  (All lazy loaded now)
+Byte compiler has been added to R (see what can be done with it!)
+
