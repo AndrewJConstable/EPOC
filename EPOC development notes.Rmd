@@ -1,0 +1,48 @@
+---
+title: "EPOC development"
+author: "Andrew Constable"
+date: "18/05/2020"
+output: html_document
+---
+
+This markdown document details the development of the EPOC package.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+Universe_data_path```
+
+
+
+
+```{r U_defaul}
+# this code runs the default Foosa universe installed with the package
+
+library(EPOC)
+# udp = Universe_data_path
+
+udp<-"C:/_w/_r/EPOCdev/EPOCtests/default/data/Universe.data.R"
+epoc(udp)
+
+```
+
+Initial call
+
+> epoc(Universe_data_path)
+Instantiating model universe using data input file at specified path: C:/_w/_r/EPOCdev/EPOCtests/default/data/Universe.data.R.
+Output data files written to: C:/_w/_r/EPOCdev/EPOC/runtime
+Error in .local(.Object, ...) : 
+  Not compatible with requested type: [type=builtin; target=logical].
+
+Second call
+> epoc(Universe_data_path)
+Instantiating model universe using data input file at specified path: C:/_w/_r/EPOCdev/EPOCtests/default/data/Universe.data.R.
+Output data files written to: C:/_w/_r/EPOCdev/EPOC/runtime
+Error in .local(.Object, ...) : 
+  long vectors not supported yet: ../include/Rinlinedfuns.h:535
+Called from: .local(.Object, ...)
+Browse[1]> 
+
+
+# ERROR: Definition of function '.local' not found
+# in namespace 'namespace:EPOC'
+

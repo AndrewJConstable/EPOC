@@ -1,3 +1,0 @@
-PKG_LIBS+= -lRcpp
-PKG_LIBS+= -LC:/Users/Troy/Documents/R/win-library/2.14/Rcpp/libs/i386
-PKG_CPPFLAGS = -IC:/Users/Troy/Documents/R/win-library/2.14/Rcpp/include

@@ -6,8 +6,12 @@
 # Universe input data is parsed from universe.data file found at the path passed to constructor. 
 #
 # S4
-# Created 5/2/2009 Troy Robertson
-# Modified 20/3/2012 - TR
+# Authors: Troy Robertson (TR), Andrew Constable (AC)
+# History
+# 20090205 Created (TR)
+# 20120320 Modified (TR)
+# 20200526 debugged RcppFileConn calls (AC) - explicit use of defaults in parsing
+
 ################################################################################
 
 # Define Universe class with data members (slots)
@@ -45,11 +49,11 @@ setMethod("initialize", "Universe",
 		if (!is.null(loglevel) && loglevel != "quiet") {
 			openmode <- ifelse(is.null(logtrunc) || !logtrunc, "a", "w")
 			logpath <- file.path(getwd(), ifelse(!is.null(logfile) && logfile != "", logfile, .Object@.logfile))
-			logconn <- .Call("createRcppFileConn", logpath, openmode, PACKAGE="EPOC")
-	
-			.Call("writeRcppFileConn", logconn, paste(date(), ": Opening log file connection: ", logpath, TRUE), PACKAGE="EPOC")
+						logconn <- .Call("createRcppFileConn", logpath, openmode, PACKAGE="EPOC")
+
+			.Call("writeRcppFileConn", logconn, paste(date(), ": Opening log file connection: ", logpath, TRUE),NULL, PACKAGE="EPOC")
 		}
-		
+
 		# Suck in data.  logconn will start working after this
 		.Object <- callNextMethod(.Object, dataPath, msglevel=msglevel, loglevel=loglevel, logconn=logconn)
 		

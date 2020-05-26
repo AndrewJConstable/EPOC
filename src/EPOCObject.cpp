@@ -206,14 +206,14 @@ SEXP setSlot(SEXP epocObj, const char* slt, const char* val) {
  * Parameters:
  *	connname	character	name of connection
  *	filepath	character 	path to file to open (optional)
- *	openmode	character 	c(“a”, “w”, “r”) defaults to “a”
+ *	openmode	character 	c(?a?, ?w?, ?r?) defaults to ?a?
  **/
 RcppExport SEXP getFileConnection(SEXP epocObj, SEXP connname, SEXP filepath, SEXP openmode) {
 BEGIN_RCPP
 	Rcpp::S4 s4Obj = asS4EO(epocObj);
 	if ( connname == NULL || Rf_isNull(connname) ) Rf_error("Connection name required.");
 	SEXP fileConn;
-	
+
 	try {
 		fileConn = getXData(epocObj, "EPOCObject", "fileConnections", connname);
 	} catch(std::range_error re) {

@@ -8,8 +8,12 @@
 # This class inherits from .environment.  
 #
 # S4 Class
-# Created 14/5/2009 Troy Robertson
-# Modified 20/3/2012 - TR
+# Authors: Troy Robertson (TR), Andrew Constable (AC)
+# History
+# 20090514 Created (TR)
+# 20120320 Modified (TR)
+# 20200526 debugged RcppFileConn calls (AC) - explicit use of defaults in parsing
+
 ################################################################################
 
 # Create EOPCObject class
@@ -143,7 +147,7 @@ setMethod("parseInputData", signature(.Object="EPOCObject"),
 # Parameters:
 #	connname	character	name of connection
 #	filepath	character 	path to file to open (optional)
-#	openmode	character 	c(“a”, “w”, “r”) defaults to “a”
+#	openmode	character 	c(?a?, ?w?, ?r?) defaults to ?a?
 setGeneric("getFileConnection", function(.Object, connname, ...) standardGeneric("getFileConnection"))
 setMethod("getFileConnection", signature(.Object="EPOCObject", connname="character"),
     function(.Object, connname, filepath=missing, openmode="a") {
@@ -156,7 +160,7 @@ setMethod("getFileConnection", signature(.Object="EPOCObject", connname="charact
 					isopen <- .Call("openRcppFileConn", .Object$fileConnections[[connname]], filepath, openmode, PACKAGE="EPOC")
 				} else {
 					# this call will only reopen if it is closed
-					isopen <- .Call("openRcppFileConn", .Object$fileConnections[[connname]], PACKAGE="EPOC")
+					isopen <- .Call("openRcppFileConn", .Object$fileConnections[[connname]], "","",PACKAGE="EPOC")
 				}
 				if (isopen) return(.Object$fileConnections[[connname]])
 			}
@@ -475,7 +479,7 @@ setMethod(".logEPOCMessage", signature(.Object="EPOCObject", msg="ANY"),
 	function(.Object, msg="", ..., sep="", flag="") {
 		logconn <- .Object$fileConnections$logFile
 		if (!is.null(logconn) && class(logconn) == "externalptr" && .Call("isopenRcppFileConn", logconn, PACKAGE="EPOC")) {
-			.Call("writeRcppFileConn", logconn, toString(paste(flag, toString(msg), ..., sep=sep)), PACKAGE="EPOC")				
+			.Call("writeRcppFileConn", logconn, toString(paste(flag, toString(msg), ..., sep=sep)), TRUE, PACKAGE="EPOC")				
 		}
 	}
 )

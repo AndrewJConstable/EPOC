@@ -182,6 +182,7 @@ RcppExport SEXP createRcppFileConn(SEXP connpath, SEXP openmode);
 SEXP createRcppFileConn(const char* connpath, const char* openmode="");
 RcppExport SEXP openRcppFileConn(SEXP fcObj, SEXP connpath, SEXP openmode);
 SEXP openRcppFileConn(SEXP fcObj, const char* connpath="", const char* openmode="");
+RcppExport SEXP openconnRcppFileConn(SEXP fcObj);
 RcppExport SEXP isopenRcppFileConn(SEXP fcObj);
 RcppExport SEXP getpathRcppFileConn(SEXP fcObj);
 RcppExport SEXP getmodeRcppFileConn(SEXP fcObj);
@@ -191,26 +192,6 @@ RcppExport SEXP readlineRcppFileConn(SEXP fcObj, SEXP linenum);
 SEXP readlineRcppFileConn(SEXP fcObj, int linenum=0);
 RcppExport SEXP readRcppFileConn(SEXP fcObj);
 RcppExport SEXP closeRcppFileConn(SEXP fcObj);
-/** NOTE: There is a problem with this class and it's associated Rcpp exported functions
- * For some reason FileConnection objects instantiated by this class are not PROTECTED and
- * memory segmentation faults occur.
- * Instead, EPOC R code implements the functionality of the ConnectionManager.
- **/
- /**
-RcppExport SEXP createConnectionManager();
-//RcppExport SEXP createConnectionManager(SEXP connname, SEXP connpath, SEXP openmode);
-RcppExport SEXP getConnection(SEXP cmObj, SEXP connname);
-RcppExport SEXP addConnection(SEXP cmObj, SEXP fcObj, SEXP connname);
-RcppExport SEXP openConnection(SEXP cmObj, SEXP connname, SEXP connpath, SEXP openmode);
-RcppExport SEXP isopenConnection(SEXP cmObj, SEXP connname);
-RcppExport SEXP getpathConnection(SEXP cmObj, SEXP connname);
-RcppExport SEXP getmodeConnection(SEXP cmObj, SEXP connname);
-RcppExport SEXP writeConnection(SEXP cmObj, SEXP connname, SEXP msg);
-SEXP writeConnection(SEXP cmObj, const char* connname, const char* msg);
-RcppExport SEXP readlineConnection(SEXP cmObj, SEXP connname, SEXP linenum);
-RcppExport SEXP readConnection(SEXP cmObj, SEXP connname);
-RcppExport SEXP closeConnection(SEXP cmObj, SEXP connname);
-**/
 
 /********* Helper functions *******************/
 Rcpp::S4 asS4EO(SEXP sexpObj, const char* cName);
